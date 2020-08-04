@@ -1,5 +1,21 @@
 ﻿  game.cpp
 c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.h(96): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(72): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(250): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(66): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(243): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+  geometry.cpp
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.h(96): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(50): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(89): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(120): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(132): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(171): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(211): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(221): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(262): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(292): warning C4267: инициализация: преобразование из "size_t" в "uint32_t"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(371): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.cpp(393): warning C4018: <: несоответствие типов со знаком и без знака
+  main.cpp
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.h(96): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  Создание кода...
   3dObjectAnimation.vcxproj -> C:\Users\Влад\source\repos\3dObjectAnimation\x64\Debug\3dObjectAnimation.exe

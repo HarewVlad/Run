@@ -10,8 +10,7 @@ struct Game {
   Directx *dx;
   Camera *camera;
   FbxManager *fbxManager;
-
-  std::unordered_map<std::string, Geometry *> objects;
+  GeometryManager *geometryManager;
 
   // Input
   // Mouse

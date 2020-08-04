@@ -90,7 +90,7 @@ struct AnimationClip {
 };
 
 struct SkinnedData {
-  std::vector<std::string> boneName;
+  std::vector<std::string> boneNames;
   std::vector<int> boneHierarchy;
   std::vector<XMFLOAT4X4> boneOffsets;
   std::unordered_map<std::string, AnimationClip> animations;
@@ -139,6 +139,10 @@ struct SkinnedModelInstance {
   void update(float dt) {
     timePos += dt;
 
+    if (timePos >= 1.0f) {
+      timePos = 0.0f;
+    }
+
     skinnedData.getFinalTransformsForAnimation(animationName, timePos, finalTransforms);
   }
 };
@@ -173,7 +177,6 @@ struct FbxLoader {
   std::unordered_map<std::string, SkinnedModelInstance> modelInstances;
 
   FbxLoader() {
-    // Init fbxManager
     manager = FbxManager::Create();
     FbxIOSettings *ioSettings = FbxIOSettings::Create(manager, IOSROOT);
     manager->SetIOSettings(ioSettings);
@@ -196,7 +199,7 @@ struct FbxLoader {
 
   void getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData) {
     skinnedData.boneHierarchy.push_back(parentIndex);
-    skinnedData.boneName.push_back(node->GetName());
+    skinnedData.boneNames.push_back(node->GetName());
 
     for (int i = 0; i < node->GetChildCount(); i++) {
       getSkeletonHierachy(node->GetChild(i), skinnedData.boneHierarchy.size(), currentIndex, skinnedData);
@@ -212,7 +215,7 @@ struct FbxLoader {
     FbxAMatrix geometryTransform = FbxAMatrix(t, r, s);
 
     AnimationClip animation;
-    animation.boneAnimations.resize(skinnedData.boneName.size());
+    animation.boneAnimations.resize(skinnedData.boneNames.size());
 
     for (int deformerIndex = 0; deformerIndex < mesh->GetDeformerCount(); deformerIndex++) {
       FbxSkin *skin = reinterpret_cast<FbxSkin *>(mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
@@ -223,8 +226,8 @@ struct FbxLoader {
 
         std::string currentJointName = cluster->GetLink()->GetName();
         int currentJointIndex;
-        for (currentJointIndex = 0; currentJointIndex < skinnedData.boneName.size(); currentJointIndex++) {
-          if (skinnedData.boneName[currentJointIndex] == currentJointName) {
+        for (currentJointIndex = 0; currentJointIndex < skinnedData.boneNames.size(); currentJointIndex++) {
+          if (skinnedData.boneNames[currentJointIndex] == currentJointName) {
             break;
           }
         }
@@ -288,12 +291,12 @@ struct FbxLoader {
     BoneAnimation initBoneAnimation;
 
     // Initialize InitBoneAnim
-    for (int i = 0; i < skinnedData.boneName.size(); ++i)
+    for (int i = 0; i < skinnedData.boneNames.size(); ++i)
     {
       int KeyframeSize = animation.boneAnimations[i].keyframes.size();
       if (KeyframeSize != 0)
       {
-        for (int j = 0; j < KeyframeSize; ++j) // 60 frames
+        for (int j = 0; j < KeyframeSize; ++j)
         {
           Keyframe key;
 
@@ -307,7 +310,7 @@ struct FbxLoader {
       }
     }
 
-    for (int i = 0; i < skinnedData.boneName.size(); ++i)
+    for (int i = 0; i < skinnedData.boneNames.size(); ++i)
     {
       if (animation.boneAnimations[i].keyframes.size() != 0)
         continue;
@@ -329,7 +332,7 @@ struct FbxLoader {
     skinnedData.animations[animationName] = animation;
   }
 
-  void getVertexInfo(FbxMesh *mesh) {
+  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &outVertices) {
     uint32_t count = mesh->GetPolygonCount();
     for (int i = 0; i < count; i++) {
       std::string currBoneName = controlPoints[mesh->GetPolygonVertex(i, 1)]->boneName;
@@ -389,12 +392,12 @@ struct FbxLoader {
           }
         }
 
-        vertices.push_back(temp);
+        outVertices.push_back(temp);
       }
     }
   }
 
-  SkinnedModelInstance loadModel(Directx *dx, const std::string &fileName) {
+  Geometry *loadModel(Directx *dx, const std::string &fileName) {
     // Get animation name
     int index = fileName.find('.');
     std::string animationName = fileName;
@@ -433,6 +436,8 @@ struct FbxLoader {
       }
     }
 
+    std::vector<Vertex> vertices = {};
+
     const int childCount = rootNode->GetChildCount();
     for (int i = 0; i < childCount; i++) {
       FbxNode *childNode = rootNode->GetChild(i);
@@ -451,7 +456,7 @@ struct FbxLoader {
 
         getAnimation(animationName, fbxScene, childNode, skinnedData);
 
-        getVertexInfo(mesh);
+        getVertexInfo(mesh, vertices);
       }
 
       modelInstance.skinnedInfo = skinnedData;
@@ -474,10 +479,10 @@ struct FbxLoader {
 
     // TODO: free resources
 
-    // Return
     Geometry *geometry = new Geometry();
     geometry->vertexBuffer = vertexBuffer;
-    // TODO: fill the fields
+    geometry->vertices = vertices;
+    // TODO: fill indices and indexBuffer
   }
 
   SkinnedModelInstance getModelInstance(const std::string &modelInstanceName) {

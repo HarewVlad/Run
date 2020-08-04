@@ -46,15 +46,9 @@ void Game::init() {
   dx->createTexture("Kachujin.dds", 0);
 
   // Objects
-  // Box3d
-  Geometry *box3d = new Geometry {};
-  box3d->createBox3D(dx, 10, 10, 10);
-  objects["box3d"] = box3d;
-
-  // Fbx model
-  Geometry *scorpid = new Geometry{};
-  scorpid->createFBXModel(dx, fbxManager, "idle.fbx");
-  objects["scorpid"] = scorpid;
+  geometryManager = new GeometryManager();
+  geometryManager->createBox3D(dx, "box3d", 10, 10, 10);
+  geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
 }
 
 void Game::run() {
@@ -174,8 +168,8 @@ void Game::update(float t) {
   // Test FBX Model
   // TODO: redo this part and make struct and so on
   {
-    Geometry *fbxModel = objects["scorpid"];
-    fbxModel->modelInstance.update(t);
+    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
+    animationData->update(t);
   }
 
   // Update constant buffer
@@ -190,10 +184,10 @@ void Game::update(float t) {
     updatedConstantBuffer.eye = XMFLOAT3(camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2]);
 
     // TODO: Change this shit
-    Geometry *scorp = objects["scorpid"];
+    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
     memcpy(&updatedConstantBuffer.boneTransforms[0],
-      &scorp->modelInstance.finalTransforms[0], 
-      sizeof(XMMATRIX) * scorp->modelInstance.finalTransforms.size());
+      &animationData->finalTransforms[0],
+      sizeof(XMMATRIX) * animationData->finalTransforms.size());
     dx->deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
   }
 }
@@ -240,14 +234,13 @@ void Game::render(float t) {
     dx->deviceContext->PSSetShaderResources(0, 1, &scorpTexture);
     dx->deviceContext->PSSetSamplers(0, 1, &dx->sampler);
 
-    Geometry *scorp = objects["scorpid"];
+    Mesh *mesh = geometryManager->getObjectMeshData("idle.fbx");
     
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
-
     
-    dx->deviceContext->IASetVertexBuffers(0, 1, &scorp->vertexBuffer, &stride, &offset);
-    dx->deviceContext->Draw(scorp->vertices.size(), 0);
+    dx->deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
+    dx->deviceContext->Draw(mesh->vertices.size(), 0);
   }
 
   DX::ThrowIfFailed(dx->swapChain->Present(0, 0));

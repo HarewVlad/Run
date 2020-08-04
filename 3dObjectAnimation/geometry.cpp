@@ -1,8 +1,8 @@
 #pragma once
 #include "geometry.h"
 
-void Geometry::createBox3D(Directx *dx, float width, float height, float depth) {
-  vertices.resize(24);
+void GeometryManager::createBox3D(Directx *dx, const std::string &name, float width, float height, float depth) {
+  std::vector<Vertex> vertices(24);
 
   float w2 = 0.5f*width;
   float h2 = 0.5f*height;
@@ -55,9 +55,10 @@ void Geometry::createBox3D(Directx *dx, float width, float height, float depth) 
   D3D11_SUBRESOURCE_DATA initData = {};
   initData.pSysMem = &vertices[0];
 
+  ID3D11Buffer *vertexBuffer = nullptr;
   DX::ThrowIfFailed(dx->device->CreateBuffer(&bd, &initData, &vertexBuffer));
 
-  indices.resize(36);
+  std::vector<int> indices(36);
 
   // Fill in the front face index data
   indices[0] = 0; indices[1] = 1; indices[2] = 2;
@@ -92,18 +93,27 @@ void Geometry::createBox3D(Directx *dx, float width, float height, float depth) 
 
   initData.pSysMem = &indices[0];
 
+  ID3D11Buffer *indexBuffer = nullptr;
   DX::ThrowIfFailed(dx->device->CreateBuffer(&bd, &initData, &indexBuffer));
+
+  Mesh *mesh = new Mesh();
+  mesh->indexBuffer = indexBuffer;
+  mesh->indices = indices;
+  mesh->vertexBuffer = vertexBuffer;
+  mesh->vertices = vertices;
+
+  objectsMeshData[name] = mesh;
 }
 
-void Geometry::createBox2D(Directx *dx, float x, float y, float w, float h) {
-  vertices.resize(4);
+void GeometryManager::createBox2D(Directx *dx, const std::string &name, float x, float y, float w, float h) {
+  std::vector<Vertex> vertices(4);
 
   vertices[0] = Vertex{ x, y, 0, -1, 0, 0, 0, 1 };
   vertices[1] = Vertex{ x, y + h, 0, 0, -1, 0, 0, 0 };
   vertices[2] = Vertex{ x + w, y + h, 0, 1, 0, 0, 1, 0 };
   vertices[3] = Vertex{ x + w, y, 0, 0, 1, 0, 1, 1 };
 
-  indices = { 0, 1, 2, 0, 2, 3 };
+  std::vector<int> indices = { 0, 1, 2, 0, 2, 3 };
 
   D3D11_BUFFER_DESC bd = {};
   bd.Usage = D3D11_USAGE_DEFAULT;
@@ -115,6 +125,7 @@ void Geometry::createBox2D(Directx *dx, float x, float y, float w, float h) {
   D3D11_SUBRESOURCE_DATA initData = {};
   initData.pSysMem = &indices[0];
 
+  ID3D11Buffer *indexBuffer = nullptr;
   DX::ThrowIfFailed(dx->device->CreateBuffer(&bd, &initData, &indexBuffer));
 
   bd.Usage = D3D11_USAGE_DYNAMIC;
@@ -125,10 +136,19 @@ void Geometry::createBox2D(Directx *dx, float x, float y, float w, float h) {
 
   initData.pSysMem = &vertices[0];
 
+  ID3D11Buffer *vertexBuffer = nullptr;
   DX::ThrowIfFailed(dx->device->CreateBuffer(&bd, &initData, &vertexBuffer));
+
+  Mesh *mesh = new Mesh();
+  mesh->indexBuffer = indexBuffer;
+  mesh->indices = indices;
+  mesh->vertexBuffer = vertexBuffer;
+  mesh->vertices = vertices;
+
+  objectsMeshData[name] = mesh;
 }
 
-void Geometry::getControlPoints(FbxMesh *mesh) {
+void GeometryManager::getControlPoints(FbxMesh *mesh) {
   int controlPointsCount = mesh->GetControlPointsCount();
   for (int i = 0; i < controlPointsCount; i++) {
     ControlPoint *controlPoint = new ControlPoint();
@@ -143,16 +163,16 @@ void Geometry::getControlPoints(FbxMesh *mesh) {
   }
 }
 
-void Geometry::getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData) {
+void GeometryManager::getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData) {
   skinnedData.boneHierarchy.push_back(parentIndex);
-  skinnedData.boneName.push_back(node->GetName());
+  skinnedData.boneNames.push_back(node->GetName());
 
   for (int i = 0; i < node->GetChildCount(); i++) {
     getSkeletonHierachy(node->GetChild(i), skinnedData.boneHierarchy.size(), currentIndex, skinnedData);
   }
 }
 
-void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData) {
+void GeometryManager::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData) {
   FbxMesh *mesh = (FbxMesh *)node->GetNodeAttribute();
 
   const FbxVector4 t = node->GetGeometricTranslation(FbxNode::eSourcePivot);
@@ -161,7 +181,7 @@ void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinned
   FbxAMatrix geometryTransform = FbxAMatrix(t, r, s);
 
   AnimationClip animation;
-  animation.boneAnimations.resize(skinnedData.boneName.size());
+  animation.boneAnimations.resize(skinnedData.boneNames.size());
 
   for (int deformerIndex = 0; deformerIndex < mesh->GetDeformerCount(); deformerIndex++) {
     FbxSkin *skin = reinterpret_cast<FbxSkin *>(mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
@@ -172,8 +192,8 @@ void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinned
 
       std::string currentJointName = cluster->GetLink()->GetName();
       int currentJointIndex;
-      for (currentJointIndex = 0; currentJointIndex < skinnedData.boneName.size(); currentJointIndex++) {
-        if (skinnedData.boneName[currentJointIndex] == currentJointName) {
+      for (currentJointIndex = 0; currentJointIndex < skinnedData.boneNames.size(); currentJointIndex++) {
+        if (skinnedData.boneNames[currentJointIndex] == currentJointName) {
           break;
         }
       }
@@ -237,7 +257,7 @@ void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinned
   BoneAnimation initBoneAnimation;
 
   // Initialize InitBoneAnim
-  for (int i = 0; i < skinnedData.boneName.size(); ++i)
+  for (int i = 0; i < skinnedData.boneNames.size(); ++i)
   {
     int KeyframeSize = animation.boneAnimations[i].keyframes.size();
     if (KeyframeSize != 0)
@@ -256,7 +276,7 @@ void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinned
     }
   }
 
-  for (int i = 0; i < skinnedData.boneName.size(); ++i)
+  for (int i = 0; i < skinnedData.boneNames.size(); ++i)
   {
     if (animation.boneAnimations[i].keyframes.size() != 0)
       continue;
@@ -278,7 +298,7 @@ void Geometry::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinned
   skinnedData.animations["MAIN"] = animation;
 }
 
-void Geometry::createFBXModel(Directx *dx, FbxManager *manager, const std::string &path) {
+void GeometryManager::createFBXModel(Directx *dx, FbxManager *manager, const std::string &path) {
   FbxImporter* fbxImporter = FbxImporter::Create(manager, "");
   FbxScene* fbxScene = FbxScene::Create(manager, "");
 
@@ -312,6 +332,17 @@ void Geometry::createFBXModel(Directx *dx, FbxManager *manager, const std::strin
     }
   }
 
+  skinnedData.boneOffsets.resize(skinnedData.boneHierarchy.size());
+
+  // Mesh data
+  std::vector<Vertex> vertices = {};
+  std::vector<int> indices = {};
+  ID3D11Buffer *indexBuffer = nullptr;
+  ID3D11Buffer *vertexBuffer = nullptr;
+
+  // Animation data
+  AnimationData *animationData = new AnimationData();
+
   const int childCount = rootNode->GetChildCount();
   for (int i = 0; i < childCount; i++) {
     FbxNode *childNode = rootNode->GetChild(i);
@@ -325,17 +356,14 @@ void Geometry::createFBXModel(Directx *dx, FbxManager *manager, const std::strin
       FbxMesh *mesh = (FbxMesh *)childNode->GetNodeAttribute();
 
       getControlPoints(mesh);
-
-      // Animation
-      skinnedData.boneOffsets.resize(skinnedData.boneHierarchy.size());
-
       getAnimation(fbxScene, childNode, skinnedData);
+      getVertexInfo(mesh, vertices);
 
-      getVertexInfo(mesh);
+      animationData->skinnedData = skinnedData;
+      animationData->timePos = 0;
+
+      objectsAnimationData[path] = animationData;
     }
-
-    modelInstance.skinnedInfo = skinnedData;
-    modelInstance.timePos = 0;
   }
 
   D3D11_BUFFER_DESC bd = {};
@@ -349,9 +377,18 @@ void Geometry::createFBXModel(Directx *dx, FbxManager *manager, const std::strin
   initData.pSysMem = &vertices[0];
 
   DX::ThrowIfFailed(dx->device->CreateBuffer(&bd, &initData, &vertexBuffer));
+
+  // Mesh
+  Mesh *mesh = new Mesh();
+  mesh->indexBuffer = indexBuffer;
+  mesh->indices = indices;
+  mesh->vertexBuffer = vertexBuffer;
+  mesh->vertices = vertices;
+
+  objectsMeshData[path] = mesh;
 }
 
-void Geometry::getVertexInfo(FbxMesh *mesh) {
+void GeometryManager::getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices) {
   uint32_t count = mesh->GetPolygonCount();
   for (int i = 0; i < count; i++) {
     std::vector<Vertex> vertex(3);

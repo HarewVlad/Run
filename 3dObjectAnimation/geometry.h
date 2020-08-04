@@ -86,19 +86,19 @@ struct AnimationClip {
 };
 
 struct SkinnedData {
-  std::vector<std::string> boneName;
+  std::vector<std::string> boneNames;
   std::vector<int> boneHierarchy;
   std::vector<XMFLOAT4X4> boneOffsets;
   std::vector<std::string> animationName;
   std::unordered_map<std::string, AnimationClip> animations;
 
-  void getFinalTransforms(float dt, std::vector<XMFLOAT4X4> &finalTransforms) {
+  void getFinalTransforms(float t, std::vector<XMFLOAT4X4> &finalTransforms) {
     int numBones = boneOffsets.size();
 
     std::vector<XMFLOAT4X4> toParentTransforms(numBones);
     
     auto clip = animations["MAIN"];
-    clip.interpolate(dt, toParentTransforms);
+    clip.interpolate(t, toParentTransforms);
 
     std::vector<XMFLOAT4X4> toRootTransforms(numBones);
 
@@ -127,18 +127,6 @@ struct SkinnedData {
   }
 };
 
-struct SkinnedModelInstance {
-  SkinnedData skinnedInfo;
-  std::vector<XMFLOAT4X4> finalTransforms;
-  float timePos = 0.0f;
-
-  void update(float dt) {
-    timePos += dt;
-
-    skinnedInfo.getFinalTransforms(timePos, finalTransforms);
-  }
-};
-
 struct BoneIndexWeight {
   int boneIndex;
   float boneWeight;
@@ -162,44 +150,47 @@ struct ControlPoint {
   std::string boneName;
 };
 
-struct Geometry {
+struct Mesh {
   ID3D11Buffer *vertexBuffer;
   ID3D11Buffer *indexBuffer;
   std::vector<int> indices;
   std::vector<Vertex> vertices;
+};
 
-  void createBox3D(Directx *dx, float width, float height, float depth);
-  void createBox2D(Directx *dx, float x, float y, float w, float h);
+struct AnimationData {
+  SkinnedData skinnedData;
+  std::vector<XMFLOAT4X4> finalTransforms;
+  float timePos = 0.0f;
+
+  void update(float t) {
+    timePos += t;
+
+    skinnedData.getFinalTransforms(timePos, finalTransforms);
+  }
+};
+
+struct GeometryManager {
+  void createBox3D(Directx *dx, const std::string &name, float width, float height, float depth);
+  void createBox2D(Directx *dx, const std::string &name, float x, float y, float w, float h);
   void createFBXModel(Directx *dx, FbxManager *manager, const std::string &path);
-  
+
+  std::unordered_map<std::string, Mesh *> objectsMeshData;
+  std::unordered_map<std::string, AnimationData *> objectsAnimationData;
+
+  Mesh *getObjectMeshData(const std::string &name) {
+    return objectsMeshData[name];
+  }
+
+  AnimationData *getObjectAnimationData(const std::string &name) {
+    return objectsAnimationData[name];
+  }
 
   // Animation data
   void getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData);
   void getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData);
   void getControlPoints(FbxMesh *mesh);
-  void getVertexInfo(FbxMesh *mesh);
+  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices);
 
   SkinnedData skinnedData;
-  SkinnedModelInstance modelInstance;
   std::unordered_map<int, ControlPoint *> controlPoints;
-};
-
-// TODO: Add correct clearing behaviour
-enum class ObjectType {
-  STATIC,
-  PLAYER
-};
-
-struct Objects {
-  ObjectType type;
-
-  std::unordered_map<std::string, Geometry *> data;
-
-  Geometry *getGeometry(const std::string &name) {
-    return data[name];
-  }
-
-  void addGeometry(Geometry *geometry, const std::string &name) {
-    data[name] = geometry;
-  }
 };
