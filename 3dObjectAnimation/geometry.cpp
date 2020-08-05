@@ -148,7 +148,7 @@ void GeometryManager::createBox2D(Directx *dx, const std::string &name, float x,
   objectsMeshData[name] = mesh;
 }
 
-void GeometryManager::getControlPoints(FbxMesh *mesh) {
+void GeometryManager::getControlPoints(FbxMesh *mesh, std::unordered_map<int, ControlPoint *> &controlPoints) {
   int controlPointsCount = mesh->GetControlPointsCount();
   for (int i = 0; i < controlPointsCount; i++) {
     ControlPoint *controlPoint = new ControlPoint();
@@ -172,7 +172,7 @@ void GeometryManager::getSkeletonHierachy(FbxNode *node, int currentIndex, int p
   }
 }
 
-void GeometryManager::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData) {
+void GeometryManager::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData, std::unordered_map<int, ControlPoint *> &controlPoints, const std::string &path) {
   FbxMesh *mesh = (FbxMesh *)node->GetNodeAttribute();
 
   const FbxVector4 t = node->GetGeometricTranslation(FbxNode::eSourcePivot);
@@ -262,11 +262,11 @@ void GeometryManager::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &
     int KeyframeSize = animation.boneAnimations[i].keyframes.size();
     if (KeyframeSize != 0)
     {
-      for (int j = 0; j < KeyframeSize; ++j) // 60 frames
+      for (int j = 0; j < KeyframeSize; ++j)
       {
         Keyframe key;
 
-        key.time = static_cast<float>(j / 24.0f);
+        key.time = static_cast<float>(j / 144.0f);
         key.t = { 0.0f, 0.0f, 0.0f };
         key.s = { 1.0f, 1.0f, 1.0f };
         key.r = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -295,7 +295,7 @@ void GeometryManager::getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &
     }
   }
 
-  skinnedData.animations["MAIN"] = animation;
+  skinnedData.animations[path] = animation;
 }
 
 void GeometryManager::createFBXModel(Directx *dx, FbxManager *manager, const std::string &path) {
@@ -314,6 +314,10 @@ void GeometryManager::createFBXModel(Directx *dx, FbxManager *manager, const std
 
   FbxGeometryConverter geometryConverter(manager);
   geometryConverter.Triangulate(fbxScene, true);
+
+  // Initial declarations
+  SkinnedData skinnedData = {};
+  std::unordered_map<int, ControlPoint *> controlPoints;
 
   // Skeleton
   for (int i = 0; i < rootNode->GetChildCount(); i++) {
@@ -355,9 +359,9 @@ void GeometryManager::createFBXModel(Directx *dx, FbxManager *manager, const std
     if (attributeType == FbxNodeAttribute::eMesh) {
       FbxMesh *mesh = (FbxMesh *)childNode->GetNodeAttribute();
 
-      getControlPoints(mesh);
-      getAnimation(fbxScene, childNode, skinnedData);
-      getVertexInfo(mesh, vertices);
+      getControlPoints(mesh, controlPoints);
+      getAnimation(fbxScene, childNode, skinnedData, controlPoints, path);
+      getVertexInfo(mesh, vertices, controlPoints);
 
       animationData->skinnedData = skinnedData;
       animationData->timePos = 0;
@@ -388,7 +392,7 @@ void GeometryManager::createFBXModel(Directx *dx, FbxManager *manager, const std
   objectsMeshData[path] = mesh;
 }
 
-void GeometryManager::getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices) {
+void GeometryManager::getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices, std::unordered_map<int, ControlPoint *> &controlPoints) {
   uint32_t count = mesh->GetPolygonCount();
   for (int i = 0; i < count; i++) {
     std::vector<Vertex> vertex(3);

@@ -142,9 +142,6 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="directx.h" />
-    <ClInclude Include="FbxLoader.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="game.h" />
     <ClInclude Include="geometry.h" />
     <ClInclude Include="includes.h" />

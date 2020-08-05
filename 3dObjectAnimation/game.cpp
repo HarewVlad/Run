@@ -169,7 +169,7 @@ void Game::update(float t) {
   // TODO: redo this part and make struct and so on
   {
     AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
-    animationData->update(t);
+    animationData->update("idle.fbx", t);
   }
 
   // Update constant buffer

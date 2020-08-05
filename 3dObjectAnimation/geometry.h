@@ -1,3 +1,5 @@
+// Credits to YujinJung https://github.com/YujinJung/FBX-Loader
+
 #pragma once
 #include "directx.h"
 
@@ -73,6 +75,11 @@ struct BoneAnimation {
       }
     }
   }
+
+  float getEndTime() {
+    float f = keyframes.back().time;
+    return f;
+  }
 };
 
 struct AnimationClip {
@@ -83,6 +90,14 @@ struct AnimationClip {
       boneAnimations[i].Interpolate(t, boneTransforms[i]);
     }
   }
+
+  float getClipEndTime() {
+    float t = 0.0f;
+    for (int i = 0; i < boneAnimations.size(); i++) {
+      t = max(t, boneAnimations[i].getEndTime());
+    }
+    return t;
+  }
 };
 
 struct SkinnedData {
@@ -92,12 +107,12 @@ struct SkinnedData {
   std::vector<std::string> animationName;
   std::unordered_map<std::string, AnimationClip> animations;
 
-  void getFinalTransforms(float t, std::vector<XMFLOAT4X4> &finalTransforms) {
+  void getFinalTransforms(const std::string &animationName, float t, std::vector<XMFLOAT4X4> &finalTransforms) {
     int numBones = boneOffsets.size();
 
     std::vector<XMFLOAT4X4> toParentTransforms(numBones);
     
-    auto clip = animations["MAIN"];
+    auto clip = animations[animationName];
     clip.interpolate(t, toParentTransforms);
 
     std::vector<XMFLOAT4X4> toRootTransforms(numBones);
@@ -124,6 +139,11 @@ struct SkinnedData {
 
       XMStoreFloat4x4(&finalTransforms[i], XMMatrixTranspose(finalTransform));
     }
+  }
+
+  float getClipEndTime(const std::string &animationName) {
+    auto clip = animations.find(animationName);
+    return clip->second.getClipEndTime();
   }
 };
 
@@ -162,10 +182,16 @@ struct AnimationData {
   std::vector<XMFLOAT4X4> finalTransforms;
   float timePos = 0.0f;
 
-  void update(float t) {
+  void update(const std::string &animationName, float t) {
     timePos += t;
 
-    skinnedData.getFinalTransforms(timePos, finalTransforms);
+    if (timePos > skinnedData.getClipEndTime(animationName)) {
+      if (animationName == "idle.fbx") { // TODO: change name
+        timePos = 0.0f;
+      }
+    }
+
+    skinnedData.getFinalTransforms(animationName, timePos, finalTransforms);
   }
 };
 
@@ -185,12 +211,9 @@ struct GeometryManager {
     return objectsAnimationData[name];
   }
 
-  // Animation data
+  // Load animatin data methods
   void getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData);
-  void getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData);
-  void getControlPoints(FbxMesh *mesh);
-  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices);
-
-  SkinnedData skinnedData;
-  std::unordered_map<int, ControlPoint *> controlPoints;
+  void getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData, std::unordered_map<int, ControlPoint *> &controlPoints, const std::string &path);
+  void getControlPoints(FbxMesh *mesh, std::unordered_map<int, ControlPoint *> &controlPoints);
+  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices, std::unordered_map<int, ControlPoint *> &controlPoints);
 };
