@@ -3,11 +3,11 @@
 #include "utils.h"
 
 const XMVECTOR DEFAULT_UP = { 0, 1, 0 };
-const XMVECTOR DEFAULT_FORWARD = { 0, 0, 1 };
-const XMVECTOR DEFAULT_RIGHT = {1, 0, 0 }; // NOTE: inverted for better mouse experience
+const XMVECTOR DEFAULT_RIGHT = {1, 0, 0 };
 
 struct Camera {
   XMVECTOR pos;
+  XMVECTOR target;
   XMVECTOR forward;
   XMVECTOR up;
   XMVECTOR right;
@@ -19,7 +19,9 @@ struct Camera {
   float rotateX;
   float rotateY;
 
-  Camera(const XMVECTOR &pos, const XMVECTOR &forward);
+  XMVECTOR DEFAULT_FORWARD;
+
+  Camera(const XMVECTOR &pos, const XMVECTOR &target);
   void update(float t);
   void moveRight(float value);
   void moveForward(float value);

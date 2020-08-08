@@ -2,7 +2,7 @@
 
 void Game::init() {
   // Camera
-  camera = new Camera({ 0.0f, 10.0f, 30.0f }, { 0, 0, 1 });
+  camera = new Camera({ 0.0f, 10.0f, 30.0f }, { 0, 0, -1 });
 
   // Fbx manager
   fbxManager = FbxManager::Create();
