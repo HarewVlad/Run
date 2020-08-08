@@ -1,5 +1,6 @@
 #pragma once
 #include "includes.h"
+#include "constantBuffers.h"
 
 struct VertexShader {
   ID3D11VertexShader *vs;
@@ -11,18 +12,35 @@ struct PixelShader {
   ID3D10Blob *blob;
 };
 
-struct ConstantBuffer {
-  XMMATRIX world;
-  XMMATRIX view;
-  XMMATRIX proj;
-  XMMATRIX worldViewProj;
-  XMFLOAT3 eye;
-  float pad1;
-  XMMATRIX boneTransforms[96];
-};
-
 struct Directx {
-  // Main data
+  Directx() {
+    initWindow();
+    initDirectx();
+
+    dx = this;
+  }
+
+  LRESULT wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+  void initWindow();
+  void initDirectx();
+
+  void createVertexShader(LPCWSTR shaderName, LPCSTR shaderMainFunc);
+  void createPixelShader(LPCWSTR shaderName, LPCSTR shaderMainFunc);
+  void createInputLayout(const std::string &layoutName, D3D11_INPUT_ELEMENT_DESC vertexDesc[], UINT numElements, VertexShader *vertexShader);
+  void createBuffer(const std::string &name, const ConstantBuffer &cb);
+  void createTexture(const std::string &name, unsigned int miscFlags);
+
+  virtual void onMouseDown(WPARAM btnState, int x, int y) = 0;
+  virtual void onMouseUp(WPARAM btnState, int x, int y) = 0;
+  virtual void onMouseMove(WPARAM btnState, int x, int y) = 0;
+
+  static Directx *getDX() {
+    return dx;
+  }
+
+  static Directx *dx;
+
   HINSTANCE appInstance;
   HWND mainWindow;
   D3D_DRIVER_TYPE driver_type = D3D_DRIVER_TYPE_NULL;
@@ -51,13 +69,4 @@ struct Directx {
 
   // Textures
   std::unordered_map<std::string, ID3D11ShaderResourceView *> textures;
-
-  void initWindow();
-  void initDirectx();
-
-  void createVertexShader(LPCWSTR shaderName, LPCSTR shaderMainFunc);
-  void createPixelShader(LPCWSTR shaderName, LPCSTR shaderMainFunc);
-  void createInputLayout(const std::string &layoutName, D3D11_INPUT_ELEMENT_DESC vertexDesc[], UINT numElements, VertexShader *vertexShader);
-  void createBuffer(const std::string &name, const ConstantBuffer &cb);
-  void createTexture(const std::string &name, unsigned int miscFlags);
 };

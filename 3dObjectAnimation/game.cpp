@@ -1,14 +1,8 @@
-#include "utils.h"
 #include "game.h"
 
 void Game::init() {
-  dx = new Directx {};
-  dx->initWindow();
-  dx->initDirectx();
-
   // Camera
-  camera = new Camera {};
-  camera->init({ 0.0f, 10.0f, 30.0f }, { 0, 0, 0 });
+  camera = new Camera({ 0.0f, 10.0f, 30.0f }, { 0, 0, 1 });
 
   // Fbx manager
   fbxManager = FbxManager::Create();
@@ -16,10 +10,10 @@ void Game::init() {
   fbxManager->SetIOSettings(fbxIOSettings);
 
   // Shaders
-  //dx->createVertexShader(L"testVs.hlsl", "VS");
-  //dx->createPixelShader(L"testPs.hlsl", "PS");
-  dx->createVertexShader(L"scorpVs.hlsl", "VS");
-  dx->createPixelShader(L"scorpPs.hlsl", "PS");
+  dx->createVertexShader(L"testVs.hlsl", "VS");
+  dx->createPixelShader(L"testPs.hlsl", "PS");
+  // Directx::createVertexShader(L"scorpVs.hlsl", "VS");
+  // Directx::createPixelShader(L"scorpPs.hlsl", "PS");
 
   // Input layouts
   D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
@@ -27,10 +21,10 @@ void Game::init() {
     { "position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "texcoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "weights", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "boneindices", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    // { "weights", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    // { "boneindices", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
   };
-  dx->createInputLayout("mainLayout", vertexDesc, ARRAYSIZE(vertexDesc), &dx->vertexShaders[L"scorpVs.hlsl"]);
+  Directx::createInputLayout("mainLayout", vertexDesc, ARRAYSIZE(vertexDesc), &dx->vertexShaders[L"testVs.hlsl"]);
 
   // Buffers
   ConstantBuffer cb = {};
@@ -39,16 +33,23 @@ void Game::init() {
   cb.proj = XMMatrixTranspose(camera->proj);
   cb.worldViewProj = XMMatrixTranspose(camera->world * camera->view * camera->proj);
   cb.eye = { camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2] };
-  dx->createBuffer("constantBuffer", cb);
+  Directx::createBuffer("constantBuffer", cb);
 
   // Textures
   // Scorp skin
-  dx->createTexture("Kachujin.dds", 0);
+  //Directx::createTexture("Kachujin.dds", 0);
 
   // Objects
   geometryManager = new GeometryManager();
   geometryManager->createBox3D(dx, "box3d", 10, 10, 10);
-  geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
+  //geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
+  //geometryManager->createFBXModel(dx, fbxManager, "walk.fbx"); // TODO: make it run in parallel
+
+  // Player
+  player = new Player();
+  //player->setMeshData(geometryManager->getObjectMeshData("idle.fbx"));
+  //player->addAnimationData("idle.fbx", geometryManager->getObjectAnimationData("idle.fbx"));
+  //player->addAnimationData("walk.fbx", geometryManager->getObjectAnimationData("walk.fbx"));
 }
 
 void Game::run() {
@@ -98,78 +99,70 @@ void Game::run() {
 void Game::input(float t) {
   // Keyboard
   {
-    if (GetKeyState(0x44) & 0x8000)
+    if (GetAsyncKeyState(0x44) & 0x8000)
     {
-      camera->moveRight += SPEED;
+      camera->moveRight(SPEED);
     }
-    else if (GetKeyState(0x41) & 0x8000)
+    else if (GetAsyncKeyState(0x41) & 0x8000)
     {
-      camera->moveRight -= SPEED;
+      camera->moveRight(-SPEED);
     }
-    else if (GetKeyState(0x57) & 0x8000)
+    else if (GetAsyncKeyState(0x57) & 0x8000)
     {
-      camera->moveForward += SPEED;
+      camera->moveForward(SPEED);
     }
-    else if (GetKeyState(0x53) & 0x8000)
+    else if (GetAsyncKeyState(0x53) & 0x8000)
     {
-      camera->moveForward -= SPEED;
+      camera->moveForward(-SPEED);
     }
-    else if (GetKeyState(VK_SPACE) & 0x8000)
+    /*else if (GetKeyState(VK_SPACE) & 0x8000)
     {
-      dx->swapChain->SetFullscreenState(true, NULL);
+      Directx::swapChain->SetFullscreenState(true, NULL);
     }
     else if (GetKeyState(VK_SHIFT) & 0x8000)
     {
-      dx->swapChain->SetFullscreenState(false, NULL);
+      Directx::swapChain->SetFullscreenState(false, NULL);
     }
+    */
   }
-  // Mouse 
+}
+
+void Game::onMouseDown(WPARAM btnState, int x, int y) {
+
+}
+void Game::onMouseUp(WPARAM btnState, int x, int y) {
+
+}
+void Game::onMouseMove(WPARAM btnState, int x, int y) {
+  float dx = XMConvertToRadians(0.25f*static_cast<float>(x - prevMousePos.x));
+  float dy = XMConvertToRadians(0.25f*static_cast<float>(y - prevMousePos.y));
+
+  if ((btnState & MK_LBUTTON) != 0)
   {
-    POINT newMousePos = {};
-    if (GetKeyState(VK_RBUTTON) & 0x8000)
-    {
-      GetCursorPos(&newMousePos);
-      if (ScreenToClient(dx->mainWindow, &newMousePos))
-      {
-        if (newMousePos.x > 0 && newMousePos.y > 0)
-        {
-          if (newMousePos.x <= Window::WIDTH && newMousePos.y <= Window::HEIGHT)
-          {
-            prevMousePos = currMousePos;
-            currMousePos = newMousePos;
-          }
-        }
-      }
-    }
-    else
-    {
-      GetCursorPos(&newMousePos);
-      if (ScreenToClient(dx->mainWindow, &newMousePos))
-      {
-        if (newMousePos.x > 0 && newMousePos.y > 0)
-        {
-          if (newMousePos.x <= Window::WIDTH && newMousePos.y <= Window::HEIGHT)
-          {
-            currMousePos = newMousePos;
-            prevMousePos = currMousePos;
-          }
-        }
-      }
-    }
+    camera->rotateX += dx;
+    camera->rotateY += dy;
   }
+  else if ((btnState & MK_RBUTTON) != 0)
+  {
+    camera->rotateX += dx;
+    camera->rotateY += dy;
+  }
+
+  prevMousePos.x = x;
+  prevMousePos.y = y;
 }
 
 void Game::update(float t) {
   // Camera
   {
-    camera->update(prevMousePos, currMousePos, t);
+    camera->update(t);
   }
 
   // Test FBX Model
   // TODO: redo this part and make struct and so on
   {
-    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
-    animationData->update("idle.fbx", t);
+    //AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
+    //animationData->update("idle.fbx", t);
   }
 
   // Update constant buffer
@@ -183,26 +176,29 @@ void Game::update(float t) {
     updatedConstantBuffer.worldViewProj = XMMatrixTranspose(camera->world * camera->view * camera->proj);
     updatedConstantBuffer.eye = XMFLOAT3(camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2]);
 
+    // TODO: player->updateCB();
     // TODO: Change this shit
+    /*
     AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
     memcpy(&updatedConstantBuffer.boneTransforms[0],
       &animationData->finalTransforms[0],
       sizeof(XMMATRIX) * animationData->finalTransforms.size());
-    dx->deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
+      */
+    Directx::deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
   }
 }
 
 void Game::render(float t) {
-  dx->deviceContext->ClearRenderTargetView(dx->renderTargetView, Colors::Gray);
-  dx->deviceContext->ClearDepthStencilView(dx->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  Directx::deviceContext->ClearRenderTargetView(dx->renderTargetView, Colors::Gray);
+  Directx::deviceContext->ClearDepthStencilView(dx->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-  dx->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  dx->deviceContext->IASetInputLayout(dx->layouts["mainLayout"]);
+  Directx::deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  Directx::deviceContext->IASetInputLayout(dx->layouts["mainLayout"]);
 
-  dx->deviceContext->OMSetRenderTargets(1, &dx->renderTargetView, dx->depthStencilView);
+  Directx::deviceContext->OMSetRenderTargets(1, &dx->renderTargetView, dx->depthStencilView);
 
   // Cube 3d
-  /*{
+  {
     VertexShader vertexShader = dx->vertexShaders[L"testVs.hlsl"];
     PixelShader pixelShader = dx->pixelShaders[L"testPs.hlsl"];
     ID3D11Buffer *buffer = dx->buffers["constantBuffer"];
@@ -211,37 +207,39 @@ void Game::render(float t) {
     dx->deviceContext->VSSetConstantBuffers(0, 1, &buffer);
     dx->deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
 
-    Geometry *box3d = objects["box3d"];
+    Mesh *mesh = geometryManager->getObjectMeshData("box3d");
 
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
 
-    dx->deviceContext->IASetVertexBuffers(0, 1, &box3d->vertexBuffer, &stride, &offset);
-    dx->deviceContext->IASetIndexBuffer(box3d->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    dx->deviceContext->DrawIndexed(box3d->indices.size(), 0, 0);
-  }*/
-
-  // Fbx scorp
-  {
-    VertexShader vertexShader = dx->vertexShaders[L"scorpVs.hlsl"];
-    PixelShader pixelShader = dx->pixelShaders[L"scorpPs.hlsl"];
-    ID3D11Buffer *buffer = dx->buffers["constantBuffer"];
-    ID3D11ShaderResourceView *scorpTexture = dx->textures["Kachujin.dds"];
-
-    dx->deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
-    dx->deviceContext->VSSetConstantBuffers(0, 1, &buffer);
-    dx->deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
-    dx->deviceContext->PSSetShaderResources(0, 1, &scorpTexture);
-    dx->deviceContext->PSSetSamplers(0, 1, &dx->sampler);
-
-    Mesh *mesh = geometryManager->getObjectMeshData("idle.fbx");
-    
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    
     dx->deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
-    dx->deviceContext->Draw(mesh->vertices.size(), 0);
+    dx->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    dx->deviceContext->DrawIndexed(mesh->indices.size(), 0, 0);
   }
 
-  DX::ThrowIfFailed(dx->swapChain->Present(0, 0));
+  // Fbx scorp
+  /*
+  {
+    VertexShader vertexShader = Directx::vertexShaders[L"scorpVs.hlsl"];
+    PixelShader pixelShader = Directx::pixelShaders[L"scorpPs.hlsl"];
+    ID3D11Buffer *buffer = Directx::buffers["constantBuffer"];
+    ID3D11ShaderResourceView *scorpTexture = Directx::textures["Kachujin.dds"];
+
+    Directx::deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
+    Directx::deviceContext->VSSetConstantBuffers(0, 1, &buffer);
+    Directx::deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
+    Directx::deviceContext->PSSetShaderResources(0, 1, &scorpTexture);
+    Directx::deviceContext->PSSetSamplers(0, 1, &sampler);
+
+    Mesh *mesh = geometryManager->getObjectMeshData("idle.fbx"); // NOTE: player
+    
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    
+    Directx::deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
+    Directx::deviceContext->Draw(mesh->vertices.size(), 0);
+  }
+  */
+
+  DX::ThrowIfFailed(Directx::swapChain->Present(0, 0));
 }

@@ -1,20 +1,35 @@
 #pragma once
 #include "directx.h"
 
-LRESULT wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+Directx *Directx::dx = nullptr;
+
+LRESULT Directx::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   switch (msg)
   {
   case WM_CLOSE:
     PostQuitMessage(0);
     break;
+  case WM_LBUTTONDOWN:
+  case WM_MBUTTONDOWN:
+  case WM_RBUTTONDOWN:
+    onMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+  case WM_LBUTTONUP:
+  case WM_MBUTTONUP:
+  case WM_RBUTTONUP:
+    onMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+  case WM_MOUSEMOVE:
+    onMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
   }
   return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 LRESULT CALLBACK mainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  return wndProc(hwnd, msg, wParam, lParam);
+  return Directx::getDX()->wndProc(hwnd, msg, wParam, lParam);
 }
 
 void Directx::initWindow() {

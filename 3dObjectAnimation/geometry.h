@@ -1,4 +1,4 @@
-// Credits to YujinJung https://github.com/YujinJung/FBX-Loader
+// Parse FBX file - Credits to YujinJung https://github.com/YujinJung/FBX-Loader
 
 #pragma once
 #include "directx.h"
@@ -196,13 +196,18 @@ struct AnimationData {
 };
 
 struct GeometryManager {
+  // Create
   void createBox3D(Directx *dx, const std::string &name, float width, float height, float depth);
   void createBox2D(Directx *dx, const std::string &name, float x, float y, float w, float h);
   void createFBXModel(Directx *dx, FbxManager *manager, const std::string &path);
 
-  std::unordered_map<std::string, Mesh *> objectsMeshData;
-  std::unordered_map<std::string, AnimationData *> objectsAnimationData;
+  // Animation related methods
+  void getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData);
+  void getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData, std::unordered_map<int, ControlPoint *> &controlPoints, const std::string &path);
+  void getControlPoints(FbxMesh *mesh, std::unordered_map<int, ControlPoint *> &controlPoints);
+  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices, std::unordered_map<int, ControlPoint *> &controlPoints);
 
+  // Get
   Mesh *getObjectMeshData(const std::string &name) {
     return objectsMeshData[name];
   }
@@ -211,9 +216,6 @@ struct GeometryManager {
     return objectsAnimationData[name];
   }
 
-  // Load animatin data methods
-  void getSkeletonHierachy(FbxNode *node, int currentIndex, int parentIndex, SkinnedData &skinnedData);
-  void getAnimation(FbxScene *scene, FbxNode *node, SkinnedData &skinnedData, std::unordered_map<int, ControlPoint *> &controlPoints, const std::string &path);
-  void getControlPoints(FbxMesh *mesh, std::unordered_map<int, ControlPoint *> &controlPoints);
-  void getVertexInfo(FbxMesh *mesh, std::vector<Vertex> &vertices, std::unordered_map<int, ControlPoint *> &controlPoints);
+  std::unordered_map<std::string, Mesh *> objectsMeshData;
+  std::unordered_map<std::string, AnimationData *> objectsAnimationData;
 };
