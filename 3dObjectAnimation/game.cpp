@@ -10,10 +10,10 @@ void Game::init() {
   fbxManager->SetIOSettings(fbxIOSettings);
 
   // Shaders
-  dx->createVertexShader(L"testVs.hlsl", "VS");
-  dx->createPixelShader(L"testPs.hlsl", "PS");
-  // Directx::createVertexShader(L"scorpVs.hlsl", "VS");
-  // Directx::createPixelShader(L"scorpPs.hlsl", "PS");
+  Directx::createVertexShader(L"testVs.hlsl", "VS");
+  Directx::createPixelShader(L"testPs.hlsl", "PS");
+  Directx::createVertexShader(L"scorpVs.hlsl", "VS");
+  Directx::createPixelShader(L"scorpPs.hlsl", "PS");
 
   // Input layouts
   D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
@@ -21,10 +21,10 @@ void Game::init() {
     { "position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "texcoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    // { "weights", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    // { "boneindices", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    { "weights", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "boneindices", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
   };
-  Directx::createInputLayout("mainLayout", vertexDesc, ARRAYSIZE(vertexDesc), &dx->vertexShaders[L"testVs.hlsl"]);
+  Directx::createInputLayout("mainLayout", vertexDesc, ARRAYSIZE(vertexDesc), &dx->vertexShaders[L"scorpVs.hlsl"]);
 
   // Buffers
   ConstantBuffer cb = {};
@@ -37,19 +37,19 @@ void Game::init() {
 
   // Textures
   // Scorp skin
-  //Directx::createTexture("Kachujin.dds", 0);
+  Directx::createTexture("Kachujin.dds", 0);
 
   // Objects
   geometryManager = new GeometryManager();
   geometryManager->createBox3D(dx, "box3d", 10, 10, 10);
-  //geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
-  //geometryManager->createFBXModel(dx, fbxManager, "walk.fbx"); // TODO: make it run in parallel
+  geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
+  geometryManager->createFBXModel(dx, fbxManager, "walk.fbx"); // TODO: make it run in parallel
 
   // Player
   player = new Player();
-  //player->setMeshData(geometryManager->getObjectMeshData("idle.fbx"));
-  //player->addAnimationData("idle.fbx", geometryManager->getObjectAnimationData("idle.fbx"));
-  //player->addAnimationData("walk.fbx", geometryManager->getObjectAnimationData("walk.fbx"));
+  player->setMeshData(geometryManager->getObjectMeshData("idle.fbx"));
+  player->addAnimationData("idle.fbx", geometryManager->getObjectAnimationData("idle.fbx"));
+  player->addAnimationData("walk.fbx", geometryManager->getObjectAnimationData("walk.fbx"));
 }
 
 void Game::run() {
@@ -161,8 +161,8 @@ void Game::update(float t) {
   // Test FBX Model
   // TODO: redo this part and make struct and so on
   {
-    //AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
-    //animationData->update("idle.fbx", t);
+    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
+    animationData->update("idle.fbx", t);
   }
 
   // Update constant buffer
@@ -178,12 +178,10 @@ void Game::update(float t) {
 
     // TODO: player->updateCB();
     // TODO: Change this shit
-    /*
     AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
     memcpy(&updatedConstantBuffer.boneTransforms[0],
       &animationData->finalTransforms[0],
       sizeof(XMMATRIX) * animationData->finalTransforms.size());
-      */
     Directx::deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
   }
 }
@@ -197,6 +195,7 @@ void Game::render(float t) {
 
   Directx::deviceContext->OMSetRenderTargets(1, &dx->renderTargetView, dx->depthStencilView);
 
+  /*
   // Cube 3d
   {
     VertexShader vertexShader = dx->vertexShaders[L"testVs.hlsl"];
@@ -216,9 +215,9 @@ void Game::render(float t) {
     dx->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     dx->deviceContext->DrawIndexed(mesh->indices.size(), 0, 0);
   }
+  */
 
   // Fbx scorp
-  /*
   {
     VertexShader vertexShader = Directx::vertexShaders[L"scorpVs.hlsl"];
     PixelShader pixelShader = Directx::pixelShaders[L"scorpPs.hlsl"];
@@ -239,7 +238,6 @@ void Game::render(float t) {
     Directx::deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
     Directx::deviceContext->Draw(mesh->vertices.size(), 0);
   }
-  */
 
   DX::ThrowIfFailed(Directx::swapChain->Present(0, 0));
 }

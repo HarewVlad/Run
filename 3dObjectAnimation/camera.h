@@ -4,6 +4,7 @@
 
 const XMVECTOR DEFAULT_UP = { 0, 1, 0 };
 const XMVECTOR DEFAULT_RIGHT = {1, 0, 0 };
+const XMVECTOR DEFAULT_FORWARD = { 0, 0, 1 };
 
 struct Camera {
   XMVECTOR pos;
@@ -18,8 +19,6 @@ struct Camera {
 
   float rotateX;
   float rotateY;
-
-  XMVECTOR DEFAULT_FORWARD;
 
   Camera(const XMVECTOR &pos, const XMVECTOR &target);
   void update(float t);

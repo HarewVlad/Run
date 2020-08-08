@@ -8,5 +8,5 @@ struct ConstantBuffer {
   XMMATRIX worldViewProj;
   XMFLOAT3 eye;
   float pad1;
-  // XMMATRIX boneTransforms[96];
+  XMMATRIX boneTransforms[96];
 };

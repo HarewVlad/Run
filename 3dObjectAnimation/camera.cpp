@@ -3,7 +3,6 @@
 Camera::Camera(const XMVECTOR &pos, const XMVECTOR &target) {
   this->pos = pos;
   this->target = target;
-  this->DEFAULT_FORWARD = target;
   this->forward = DEFAULT_FORWARD;
   this->up = DEFAULT_UP;
   this->right = DEFAULT_RIGHT;
