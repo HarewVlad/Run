@@ -29,6 +29,7 @@ struct Directx {
   void createPixelShader(LPCWSTR shaderName, LPCSTR shaderMainFunc);
   void createInputLayout(const std::string &layoutName, D3D11_INPUT_ELEMENT_DESC vertexDesc[], UINT numElements, VertexShader *vertexShader);
   void createBuffer(const std::string &name, const ConstantBuffer &cb);
+  ID3D11Buffer *createBufferInstance(const ConstantBuffer &cb);
   void createTexture(const std::string &name, unsigned int miscFlags);
 
   virtual void onMouseDown(WPARAM btnState, int x, int y) = 0;

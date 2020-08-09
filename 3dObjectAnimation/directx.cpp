@@ -279,6 +279,22 @@ void Directx::createInputLayout(const std::string &layoutName, D3D11_INPUT_ELEME
   layouts[layoutName] = inputLayout;
 }
 
+ID3D11Buffer *Directx::createBufferInstance(const ConstantBuffer &cb) {
+  ID3D11Buffer *buffer = nullptr;
+
+  D3D11_BUFFER_DESC bd = {};
+  bd.Usage = D3D11_USAGE_DEFAULT;
+  bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  bd.ByteWidth = sizeof(ConstantBuffer);
+  bd.CPUAccessFlags = 0;
+
+  D3D11_SUBRESOURCE_DATA initData = {};
+  initData.pSysMem = &cb;
+  DX::ThrowIfFailed(device->CreateBuffer(&bd, &initData, &buffer));
+
+  return buffer;
+}
+
 void Directx::createBuffer(const std::string &name, const ConstantBuffer &cb) {
   ID3D11Buffer *buffer = nullptr;
 

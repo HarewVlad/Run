@@ -1,11 +1,17 @@
 #include "camera.h"
 
 Camera::Camera(const XMVECTOR &pos, const XMVECTOR &target) {
+  this->defaultForward = XMVector3Normalize(target - pos);
+  this->defaultRight = { -1, 0, 0 };
+  this->defaultUp = XMVector3Cross(defaultForward, defaultRight);
+
   this->pos = pos;
   this->target = target;
-  this->forward = DEFAULT_FORWARD;
-  this->up = DEFAULT_UP;
-  this->right = DEFAULT_RIGHT;
+
+  this->forward = defaultForward;
+  this->right = defaultRight;
+  this->up = defaultUp;
+
   this->rotateX = 0;
   this->rotateY = 0;
 
@@ -17,9 +23,9 @@ Camera::Camera(const XMVECTOR &pos, const XMVECTOR &target) {
 void Camera::update(float t) {
   XMMATRIX rotationMatrix = XMMatrixRotationX(rotateY) * XMMatrixRotationY(rotateX);
 
-  target = XMVector3Normalize(XMVector3TransformCoord(DEFAULT_FORWARD, rotationMatrix));
-  forward = XMVector3Normalize(XMVector3TransformCoord(DEFAULT_FORWARD, rotationMatrix));
-  right = XMVector3Normalize(XMVector3TransformCoord(DEFAULT_RIGHT, rotationMatrix));
+  target = XMVector3Normalize(XMVector3TransformCoord(defaultForward, rotationMatrix));
+  forward = XMVector3Normalize(XMVector3TransformCoord(defaultForward, rotationMatrix));
+  right = XMVector3Normalize(XMVector3TransformCoord(defaultRight, rotationMatrix));
   up = XMVector3Cross(forward, right);
 
   target += pos;

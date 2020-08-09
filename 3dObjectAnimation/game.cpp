@@ -46,7 +46,7 @@ void Game::init() {
   geometryManager->createFBXModel(dx, fbxManager, "run.fbx"); // TODO: make it run in parallel
 
   // Player
-  player = new Player();
+  player = new Player(dx);
   player->setMeshData(geometryManager->getObjectMeshData("idle.fbx"));
   player->addAnimationData("idle.fbx", geometryManager->getObjectAnimationData("idle.fbx"));
   player->addAnimationData("run.fbx", geometryManager->getObjectAnimationData("run.fbx"));
@@ -104,38 +104,38 @@ void Game::input(float t) {
     if (GetAsyncKeyState(VK_UP) & 0x8000) {
       player->move(FORWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslawtion(x, y, z) ... player->world *= translationMatrix;
       XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * SPEED);
-      camera->world *= translationMatrix;
+      player->camera->world *= translationMatrix;
     }
     else if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
       player->move(BACKWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
       XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * -SPEED);
-      camera->world *= translationMatrix;
+      player->camera->world *= translationMatrix;
     }
     else if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
       player->move(LEFT, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
       XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * -SPEED);
-      camera->world *= translationMatrix;
+      player->camera->world *= translationMatrix;
     }
     else if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
       player->move(RIGHT, SPEED);
       XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * SPEED);
-      camera->world *= translationMatrix;
+      player->camera->world *= translationMatrix;
     }
     else if (GetAsyncKeyState(0x44) & 0x8000)
     {
-      camera->moveRight(SPEED);
+      player->camera->moveRight(SPEED);
     }
     else if (GetAsyncKeyState(0x41) & 0x8000)
     {
-      camera->moveRight(-SPEED);
+      player->camera->moveRight(-SPEED);
     }
     else if (GetAsyncKeyState(0x57) & 0x8000)
     {
-      camera->moveForward(SPEED);
+      player->camera->moveForward(SPEED);
     }
     else if (GetAsyncKeyState(0x53) & 0x8000)
     {
-      camera->moveForward(-SPEED);
+      player->camera->moveForward(-SPEED);
     }
     else if (GetKeyState(VK_SPACE) & 0x8000)
     {
@@ -162,13 +162,13 @@ void Game::onMouseMove(WPARAM btnState, int x, int y) {
 
   if ((btnState & MK_LBUTTON) != 0)
   {
-    camera->rotateX += dx;
-    camera->rotateY += dy;
+    player->camera->rotateX += dx;
+    player->camera->rotateY += dy;
   }
   else if ((btnState & MK_RBUTTON) != 0)
   {
-    camera->rotateX += dx;
-    camera->rotateY += dy;
+    player->camera->rotateX += dx;
+    player->camera->rotateY += dy;
   }
 
   prevMousePos.x = x;
@@ -176,37 +176,9 @@ void Game::onMouseMove(WPARAM btnState, int x, int y) {
 }
 
 void Game::update(float t) {
-  // Camera
-  {
-    camera->update(t);
-  }
-
-  // Test FBX Model
   // TODO: redo this part and make struct and so on
   {
-    player->update(t);
-  }
-
-  // Update constant buffer
-  {
-    ID3D11Buffer *constantBuffer = dx->buffers["constantBuffer"];
-
-    ConstantBuffer updatedConstantBuffer = {};
-    updatedConstantBuffer.world = XMMatrixTranspose(camera->world);
-    updatedConstantBuffer.view = XMMatrixTranspose(camera->view);
-    updatedConstantBuffer.proj = XMMatrixTranspose(camera->proj);
-    updatedConstantBuffer.worldViewProj = XMMatrixTranspose(camera->world * camera->view * camera->proj);
-    updatedConstantBuffer.eye = XMFLOAT3(camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2]);
-
-    // TODO: player->updateCB();
-    // TODO: Change this shit
-    
-
-    AnimationData *animationData = player->getCurrentAnimation();
-    memcpy(&updatedConstantBuffer.boneTransforms[0],
-      &animationData->finalTransforms[0],
-      sizeof(XMMATRIX) * animationData->finalTransforms.size());
-    Directx::deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
+    player->update(dx, t);
   }
 }
 
@@ -245,13 +217,13 @@ void Game::render(float t) {
   {
     VertexShader vertexShader = Directx::vertexShaders[L"scorpVs.hlsl"];
     PixelShader pixelShader = Directx::pixelShaders[L"scorpPs.hlsl"];
-    ID3D11Buffer *buffer = Directx::buffers["constantBuffer"];
-    ID3D11ShaderResourceView *scorpTexture = Directx::textures["Kachujin.dds"];
+    ID3D11Buffer *buffer = player->getConstantBuffer();
+    ID3D11ShaderResourceView *modelTexture = Directx::textures["Kachujin.dds"];
 
     Directx::deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
     Directx::deviceContext->VSSetConstantBuffers(0, 1, &buffer);
     Directx::deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
-    Directx::deviceContext->PSSetShaderResources(0, 1, &scorpTexture);
+    Directx::deviceContext->PSSetShaderResources(0, 1, &modelTexture);
     Directx::deviceContext->PSSetSamplers(0, 1, &sampler);
 
     Mesh *mesh = geometryManager->getObjectMeshData("idle.fbx"); // NOTE: player

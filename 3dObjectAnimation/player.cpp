@@ -1,11 +1,33 @@
 #include "player.h"
 
-void Player::update(float t) {
-  animationsData[currentAnimationName]->update(currentAnimationName, t);
-  // update Constant buffers
+void Player::update(Directx *dx, float t) {
+  // Update animation
+  {
+    animationsData[currentAnimationName]->update(currentAnimationName, t);
+  }
+
+  // Update constant buffer
+  {
+    ConstantBuffer updatedConstantBuffer = {};
+    updatedConstantBuffer.world = XMMatrixTranspose(camera->world);
+    updatedConstantBuffer.view = XMMatrixTranspose(camera->view);
+    updatedConstantBuffer.proj = XMMatrixTranspose(camera->proj);
+    updatedConstantBuffer.worldViewProj = XMMatrixTranspose(camera->world * camera->view * camera->proj);
+    updatedConstantBuffer.eye = XMFLOAT3(camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2]);
+
+    AnimationData *animationData = getCurrentAnimation();
+    memcpy(&updatedConstantBuffer.boneTransforms[0],
+      &animationData->finalTransforms[0],
+      sizeof(XMMATRIX) * animationData->finalTransforms.size());
+    dx->deviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &updatedConstantBuffer, 0, 0);
+  }
+
+  // Update camera
+  {
+    camera->update(t);
+  }
+  
   // update Player position
-  // update Camera
-  // update Animation
 }
 
 void Player::initCamera() {
