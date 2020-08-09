@@ -186,9 +186,7 @@ struct AnimationData {
     timePos += t;
 
     if (timePos > skinnedData.getClipEndTime(animationName)) {
-      if (animationName == "idle.fbx") { // TODO: change name
-        timePos = 0.0f;
-      }
+      timePos = 0.0f;
     }
 
     skinnedData.getFinalTransforms(animationName, timePos, finalTransforms);

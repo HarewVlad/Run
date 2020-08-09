@@ -43,13 +43,13 @@ void Game::init() {
   geometryManager = new GeometryManager();
   geometryManager->createBox3D(dx, "box3d", 10, 10, 10);
   geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
-  geometryManager->createFBXModel(dx, fbxManager, "walk.fbx"); // TODO: make it run in parallel
+  geometryManager->createFBXModel(dx, fbxManager, "run.fbx"); // TODO: make it run in parallel
 
   // Player
   player = new Player();
   player->setMeshData(geometryManager->getObjectMeshData("idle.fbx"));
   player->addAnimationData("idle.fbx", geometryManager->getObjectAnimationData("idle.fbx"));
-  player->addAnimationData("walk.fbx", geometryManager->getObjectAnimationData("walk.fbx"));
+  player->addAnimationData("run.fbx", geometryManager->getObjectAnimationData("run.fbx"));
 }
 
 void Game::run() {
@@ -97,9 +97,31 @@ void Game::run() {
 }
 
 void Game::input(float t) {
+  player->currentAnimationName = "idle.fbx";
+
   // Keyboard
   {
-    if (GetAsyncKeyState(0x44) & 0x8000)
+    if (GetAsyncKeyState(VK_UP) & 0x8000) {
+      player->move(FORWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslawtion(x, y, z) ... player->world *= translationMatrix;
+      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * SPEED);
+      camera->world *= translationMatrix;
+    }
+    else if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+      player->move(BACKWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
+      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * -SPEED);
+      camera->world *= translationMatrix;
+    }
+    else if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+      player->move(LEFT, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
+      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * -SPEED);
+      camera->world *= translationMatrix;
+    }
+    else if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
+      player->move(RIGHT, SPEED);
+      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * SPEED);
+      camera->world *= translationMatrix;
+    }
+    else if (GetAsyncKeyState(0x44) & 0x8000)
     {
       camera->moveRight(SPEED);
     }
@@ -115,10 +137,11 @@ void Game::input(float t) {
     {
       camera->moveForward(-SPEED);
     }
-    /*else if (GetKeyState(VK_SPACE) & 0x8000)
+    else if (GetKeyState(VK_SPACE) & 0x8000)
     {
-      Directx::swapChain->SetFullscreenState(true, NULL);
+      // Directx::swapChain->SetFullscreenState(true, NULL);
     }
+    /*
     else if (GetKeyState(VK_SHIFT) & 0x8000)
     {
       Directx::swapChain->SetFullscreenState(false, NULL);
@@ -161,8 +184,7 @@ void Game::update(float t) {
   // Test FBX Model
   // TODO: redo this part and make struct and so on
   {
-    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
-    animationData->update("idle.fbx", t);
+    player->update(t);
   }
 
   // Update constant buffer
@@ -178,7 +200,9 @@ void Game::update(float t) {
 
     // TODO: player->updateCB();
     // TODO: Change this shit
-    AnimationData *animationData = geometryManager->getObjectAnimationData("idle.fbx");
+    
+
+    AnimationData *animationData = player->getCurrentAnimation();
     memcpy(&updatedConstantBuffer.boneTransforms[0],
       &animationData->finalTransforms[0],
       sizeof(XMMATRIX) * animationData->finalTransforms.size());

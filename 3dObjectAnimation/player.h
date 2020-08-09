@@ -13,9 +13,20 @@ enum MoveDirection {
 struct Player {
   Camera *cam;
   Mesh *mesh;
-  XMFLOAT3 pos;
   std::unordered_map<std::string, AnimationData *> animationsData;
   std::string currentAnimationName;
+
+  Player() {
+    pos = { 0, 0, 0 };
+    forward = { 0, 0, 1 };
+    right = { 1, 0, 0 };
+    up = { 0, 1, 0 };
+  }
+
+  XMVECTOR pos;
+  XMVECTOR forward;
+  XMVECTOR right;
+  XMVECTOR up;
 
   void setMeshData(Mesh *mesh) {
     this->mesh = mesh;
@@ -25,7 +36,11 @@ struct Player {
     animationsData[animationName] = animationData;
   }
 
+  AnimationData *getCurrentAnimation() {
+    return animationsData[currentAnimationName];
+  }
+
   void update(float t);
   void initCamera(); // NOTE: calculate pos of camera (camera like in The Witcher 3)
-  void move(MoveDirection moveDirection);
+  void move(MoveDirection moveDirection, float value);
 };
