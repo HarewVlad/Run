@@ -57,8 +57,8 @@ void Player::move(MoveDirection moveDirection, float value) {
     // Rotate to left
     {
       rotation = XMMatrixRotationAxis(up, -value);
-      right = XMVector3Normalize(XMVector3TransformNormal(right, rotation));
-      forward = XMVector3Normalize(XMVector3TransformNormal(forward, rotation));
+      right = XMVector3TransformNormal(right, rotation);
+      forward = XMVector3TransformNormal(forward, rotation);
     }
 
     camera->world *= XMMatrixTranslationFromVector(-pos) * rotation * XMMatrixTranslationFromVector(pos);
@@ -68,8 +68,8 @@ void Player::move(MoveDirection moveDirection, float value) {
     // Rotate to right
     {
       rotation = XMMatrixRotationAxis(up, value);
-      right = XMVector3Normalize(XMVector3TransformNormal(right, rotation));
-      forward = XMVector3Normalize(XMVector3TransformNormal(forward, rotation));
+      right = XMVector3TransformNormal(right, rotation);
+      forward = XMVector3TransformNormal(forward, rotation);
     }
 
     camera->world *= XMMatrixTranslationFromVector(-pos) * rotation * XMMatrixTranslationFromVector(pos);

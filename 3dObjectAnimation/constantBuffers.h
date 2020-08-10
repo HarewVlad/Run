@@ -11,3 +11,12 @@ struct ConstantBuffer {
   float pad1;
   XMMATRIX boneTransforms[96];
 };
+
+struct ConstantBufferPlane {
+  XMMATRIX world;
+  XMMATRIX view;
+  XMMATRIX proj;
+  XMMATRIX worldViewProj;
+  XMFLOAT3 eye;
+  float pad1;
+};

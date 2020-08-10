@@ -18,5 +18,5 @@ struct VS_OUT
 
 float4 PS(VS_OUT input) : SV_Target
 {
-  return float4(input.posW, 1.0f);
+  return float4(1, 0, 0, 1);
 }

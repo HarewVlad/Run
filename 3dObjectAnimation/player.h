@@ -41,7 +41,7 @@ struct Player {
     cb.rotation = XMMatrixTranspose(rotation);
     cb.eye = { camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2] };
 
-    constantBuffer = dx->createBufferInstance(cb);
+    constantBuffer = dx->createBufferInstance(reinterpret_cast<void *>(&cb), sizeof(ConstantBuffer));
   }
 
   XMVECTOR pos;

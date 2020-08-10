@@ -16,7 +16,7 @@ void Game::init() {
   Directx::createPixelShader(L"scorpPs.hlsl", "PS");
 
   // Input layouts
-  D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+  D3D11_INPUT_ELEMENT_DESC inputLayoutPlayer[] =
   {
     { "position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -24,16 +24,24 @@ void Game::init() {
     { "weights", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "boneindices", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
   };
-  Directx::createInputLayout("mainLayout", vertexDesc, ARRAYSIZE(vertexDesc), &dx->vertexShaders[L"scorpVs.hlsl"]);
+  Directx::createInputLayout("Player", inputLayoutPlayer, ARRAYSIZE(inputLayoutPlayer), &dx->vertexShaders[L"scorpVs.hlsl"]);
+
+  D3D11_INPUT_ELEMENT_DESC inputLayoutPlane[] =
+  {
+    { "position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "texcoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  };
+  Directx::createInputLayout("Plane", inputLayoutPlane, ARRAYSIZE(inputLayoutPlane), &dx->vertexShaders[L"testVs.hlsl"]);
 
   // Buffers
-  ConstantBuffer cb = {};
+  ConstantBufferPlane cb = {};
   cb.world = XMMatrixTranspose(camera->world);
   cb.view = XMMatrixTranspose(camera->view);
   cb.proj = XMMatrixTranspose(camera->proj);
   cb.worldViewProj = XMMatrixTranspose(camera->world * camera->view * camera->proj);
   cb.eye = { camera->pos.m128_f32[0], camera->pos.m128_f32[1], camera->pos.m128_f32[2] };
-  Directx::createBuffer("constantBuffer", cb);
+  Directx::createBuffer("constantBufferPlane", reinterpret_cast<void *>(&cb), sizeof(ConstantBufferPlane));
 
   // Textures
   // Scorp skin
@@ -41,7 +49,7 @@ void Game::init() {
 
   // Objects
   geometryManager = new GeometryManager();
-  geometryManager->createBox3D(dx, "box3d", 10, 10, 10);
+  geometryManager->createBox2D(dx, "Plane", 0, 0, 1000, 1000);
   geometryManager->createFBXModel(dx, fbxManager, "idle.fbx");
   geometryManager->createFBXModel(dx, fbxManager, "run.fbx"); // TODO: make it run in parallel
 
@@ -173,7 +181,6 @@ void Game::onMouseMove(WPARAM btnState, int x, int y) {
 }
 
 void Game::update(float t) {
-  // TODO: redo this part and make struct and so on
   {
     player->update(dx, t);
   }
@@ -184,31 +191,30 @@ void Game::render(float t) {
   Directx::deviceContext->ClearDepthStencilView(dx->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
   Directx::deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  Directx::deviceContext->IASetInputLayout(dx->layouts["mainLayout"]);
 
   Directx::deviceContext->OMSetRenderTargets(1, &dx->renderTargetView, dx->depthStencilView);
 
-  /*
-  // Cube 3d
+  // Plane
   {
     VertexShader vertexShader = dx->vertexShaders[L"testVs.hlsl"];
     PixelShader pixelShader = dx->pixelShaders[L"testPs.hlsl"];
-    ID3D11Buffer *buffer = dx->buffers["constantBuffer"];
+    ID3D11Buffer *buffer = dx->buffers["constantBufferPlane"];
 
-    dx->deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
-    dx->deviceContext->VSSetConstantBuffers(0, 1, &buffer);
-    dx->deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
+    Directx::deviceContext->IASetInputLayout(dx->layouts["Plane"]);
 
-    Mesh *mesh = geometryManager->getObjectMeshData("box3d");
+    Directx::deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
+    Directx::deviceContext->VSSetConstantBuffers(0, 1, &buffer);
+    Directx::deviceContext->PSSetShader(pixelShader.ps, nullptr, 0);
+
+    Mesh *mesh = geometryManager->getObjectMeshData("Plane");
 
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
 
-    dx->deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
-    dx->deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    dx->deviceContext->DrawIndexed(mesh->indices.size(), 0, 0);
+    Directx::deviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
+    Directx::deviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    Directx::deviceContext->DrawIndexed(mesh->indices.size(), 0, 0);
   }
-  */
 
   // Fbx scorp
   {
@@ -216,6 +222,8 @@ void Game::render(float t) {
     PixelShader pixelShader = Directx::pixelShaders[L"scorpPs.hlsl"];
     ID3D11Buffer *buffer = player->getConstantBuffer();
     ID3D11ShaderResourceView *modelTexture = Directx::textures["Kachujin.dds"];
+
+    Directx::deviceContext->IASetInputLayout(dx->layouts["Player"]);
 
     Directx::deviceContext->VSSetShader(vertexShader.vs, nullptr, 0);
     Directx::deviceContext->VSSetConstantBuffers(0, 1, &buffer);
