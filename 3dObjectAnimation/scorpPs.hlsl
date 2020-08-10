@@ -7,6 +7,7 @@ cbuffer ConstantBuffer : register(b0)
   float4x4 view;
   float4x4 proj;
   float4x4 worldViewProj;
+  float4x4 rotation;
   float3 eyePos;
   float pad;
 };

@@ -102,26 +102,23 @@ void Game::input(float t) {
   // Keyboard
   {
     if (GetAsyncKeyState(VK_UP) & 0x8000) {
-      player->move(FORWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslawtion(x, y, z) ... player->world *= translationMatrix;
-      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * SPEED);
-      player->camera->world *= translationMatrix;
+      player->move(FORWARD, SPEED);
     }
-    else if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
-      player->move(BACKWARD, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
-      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->forward * -SPEED);
-      player->camera->world *= translationMatrix;
+
+    if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+      player->move(BACKWARD, SPEED);
     }
-    else if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
-      player->move(LEFT, SPEED); // NOTE: to move the player -> XMMatrixTranslation(x, y, z) ... player->world *= translationMatrix;
-      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * -SPEED);
-      player->camera->world *= translationMatrix;
+
+    if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+      player->move(LEFT, SPEED * t * 15.0f);
     }
-    else if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
-      player->move(RIGHT, SPEED);
-      XMMATRIX translationMatrix = XMMatrixTranslationFromVector(player->right * SPEED);
-      player->camera->world *= translationMatrix;
+
+    if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
+      player->move(RIGHT, SPEED * t * 15.0f);
     }
-    else if (GetAsyncKeyState(0x44) & 0x8000)
+
+
+    if (GetAsyncKeyState(0x44) & 0x8000)
     {
       player->camera->moveRight(SPEED);
     }

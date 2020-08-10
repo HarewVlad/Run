@@ -1,10 +1,10 @@
 ﻿  game.cpp
 c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\geometry.h(111): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
 c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(67): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(235): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\3dobjectanimation\3dobjectanimation\game.cpp(232): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
   Создание кода
-  4 of 3116 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
+  1 of 3120 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   3dObjectAnimation.vcxproj -> C:\Users\Влад\source\repos\3dObjectAnimation\x64\Release\3dObjectAnimation.exe
