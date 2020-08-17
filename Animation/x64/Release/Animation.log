@@ -1,0 +1,11 @@
+﻿  game.cpp
+c:\users\влад\source\repos\animation\animation\game.cpp(178): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\animation\animation\game.cpp(222): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\animation\animation\game.cpp(261): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+c:\users\влад\source\repos\animation\animation\game.cpp(378): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+  Создание кода
+  3 of 3204 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    7 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  Animation.vcxproj -> C:\Users\Влад\source\repos\Animation\x64\Release\Animation.exe
