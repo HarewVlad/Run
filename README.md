@@ -1,3 +1,3 @@
-# ChillGame
-V 0.1f = Loads model with idle animation (Model is not mine)
+# Run
+v.0.1 = Man runs quite bad
 ![](run.gif)
